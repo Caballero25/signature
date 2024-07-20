@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <style>
+        .horizontal-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .horizontal-form p {
+            margin-right: 20px;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .horizontal-form button {
+            margin-left: 20px;
+        }
+
+        #pdfViewer {
+            width: 80%;
+        }
+
+        #pdfViewer canvas {
+            margin-bottom: 10px;
+            border: 1px solid black;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Subir Documentos</h1>
+    <form id="uploadForm" method="POST" enctype="multipart/form-data" class="horizontal-form">
+        {% for field in form %}
+            {% if field.name == 'pdf' %}
+                <div class="form-group">
+                    {{ field.label }}
+                    <input type="file" id="fileInput" name="{{ field.name }}" class="form-control" required>
+                </div>
+            {% else %}
+                {{ field }}
+            {% endif %}
+        {% endfor %}
+    </form>
+    <div id="result"></div>
+    <div id="pdfViewer"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(async function(pdf) {
+                        // El PDF se cargó correctamente
+                        console.log('PDF cargado');
+
+                        const pdfViewer = document.getElementById('pdfViewer');
+                        pdfViewer.innerHTML = '';
+
+                        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                            const page = await pdf.getPage(pageNumber);
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            // Asignar ID único al canvas
+                            canvas.id = 'page-' + pageNumber;
+
+                            await page.render({
+                                canvasContext: context,
+                                viewport: viewport
+                            }).promise;
+
+                            pdfViewer.appendChild(canvas);
+
+                            // Añadir evento onclick al canvas
+                            canvas.onclick = function(event) {
+                                const rect = canvas.getBoundingClientRect();
+                                const x = event.clientX - rect.left;
+                                const y = event.clientY - rect.top;
+                                console.log(`Click en canvas ${canvas.id} en posición x: ${x}, y: ${y}`);
+                                $('#uploadForm').on('submit', function (e) {
+                                    e.preventDefault();
+                                    var formData = new FormData(this);
+
+                                    $.ajax({
+                                        url: "{% url 'upload_document' %}",
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        success: function (response) {
+                                            $('#result').html('<p>' + response.message + '</p>');
+                                            if (response.signed_pdf) {
+                                                var link = document.createElement('a');
+                                                link.href = 'data:application/pdf;base64,' + response.signed_pdf;
+                                                link.download = 'signed_document.pdf';
+                                                link.textContent = 'Descargar PDF firmado';
+                                                $('#result').append(link);
+                                            }
+                                        },
+                                        error: function (response) {
+                                            $('#result').html('<p>' + response.responseJSON.message + '</p>');
+                                        }
+                                 });
+                                });
+                            };
+                        }
+                    });
+                };
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                document.getElementById('pdfViewer').innerHTML = '<p>Por favor, seleccione un archivo PDF.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

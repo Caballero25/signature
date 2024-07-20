@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <style>
+        .horizontal-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .horizontal-form p {
+            margin-right: 20px;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .horizontal-form button {
+            margin-left: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Subir Documentos</h1>
+    <form id="uploadForm" method="POST" enctype="multipart/form-data" class="horizontal-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Subir</button>
+    </form>
+    <div id="result"></div>
+    <div id="pdfViewer"></div>
+
+    <script>
+        let itemClick;
+        $(document).ready(function () {
+            const pdfViewer = document.getElementById('pdfViewer');
+            $('#uploadForm').on('submit', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "{% url 'upload_document' %}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#result').html('<p>' + response.message + '</p>');
+                        if (response.signed_pdf) {
+                            var link = document.createElement('a');
+                            link.href = 'data:application/pdf;base64,' + response.signed_pdf;
+                            link.download = 'signed_document.pdf';
+                            link.textContent = 'Descargar PDF firmado';
+                            $('#result').append(link);
+                        }
+                    },
+                    error: function (response) {
+                        $('#result').html('<p>' + response.responseJSON.message + '</p>');
+                    }
+                });
+            });
+        });
+
+        // Visualizar pdf y capturar coordenadas de clic
+       // document.addEventListener('DOMContentLoaded', function () {
+        const pdfInput = document.querySelector('input[type="file"]');
+        const pdfViewer = document.getElementById('pdfViewer');
+
+        pdfInput.addEventListener('change', function (event) {
+            console.log("Debug 1")
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileURL = URL.createObjectURL(file);
+                const iframe = document.createElement('iframe');
+                iframe.src = fileURL;
+                iframe.width = '100%';
+                iframe.height = '100%';
+                iframe.style.position = 'absolute';
+                iframe.id = "iframeID";
+
+                const overlay = document.createElement('div');
+                overlay.className = 'overlay';
+
+                const pdfViewer = document.getElementById('pdfViewer');
+                pdfViewer.innerHTML = '';
+                pdfViewer.appendChild(iframe);
+                pdfViewer.appendChild(overlay);
+
+                overlay.addEventListener('click', function (event) {
+                    console.log("debug 3");
+                    const rect = iframe.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    console.log(`Click coordinates: (${x}, ${y})`);
+                });
+
+            } else {
+                document.getElementById('pdfViewer').innerHTML = '<p>Por favor, seleccione un archivo PDF.</p>';
+            }
+        });
+        
+        console.log("pdfview " + pdfViewer )
+       // });
+        
+        
+        
+    </script>
+</body>
+</html>

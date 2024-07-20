@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Subir Documentos</h1>
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Subir</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        $(document).ready(function () {
+            $('#uploadForm').on('submit', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: "{% url 'upload_document' %}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#result').html('<p>' + response.message + '</p>');
+                        if (response.signed_pdf) {
+                        // Crear un enlace de descarga para el PDF firmado
+                            var link = document.createElement('a');
+                            link.href = 'data:application/pdf;base64,' + response.signed_pdf;
+                            link.download = 'signed_document.pdf';
+                            link.textContent = 'Descargar PDF firmado';
+                            $('#result').append(link);
+                        }
+                    },
+                    error: function (response) {
+                        $('#result').html('<p>' + response.responseJSON.message + '</p>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
