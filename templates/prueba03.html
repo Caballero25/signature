@@ -26,12 +26,14 @@
 
         #pdfViewer {
             width: 80%;
+            height: 70vh;
         }
 
         #pdfViewer canvas {
             margin-bottom: 10px;
             border: 1px solid black;
             width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -55,7 +57,9 @@
     <div id="pdfViewer"></div>
 
     <script>
-        let clickCoordinates = { x: 0, y: 0 };
+        let coordenadaX = 676;
+        let coordenadaY = 1147;
+        let clickPage = 1
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file && file.type === 'application/pdf') {
@@ -78,7 +82,7 @@
                             canvas.width = viewport.width;
 
                             // Asignar ID único al canvas
-                            canvas.id = 'page-' + pageNumber;
+                            canvas.id = pageNumber;
 
                             await page.render({
                                 canvasContext: context,
@@ -90,9 +94,14 @@
                             // Añadir evento onclick al canvas
                             canvas.onclick = function(event) {
                                 const rect = canvas.getBoundingClientRect();
-                                clickCoordinates.x = event.clientX - rect.left;
-                                clickCoordinates.y = event.clientY - rect.top;
-                                console.log(`Click en canvas ${canvas.id} en posición x: ${clickCoordinates.x}, y: ${clickCoordinates.y}`);
+                                const canvasHeight = canvas.height + 65.484;
+                                console.log(canvasHeight)
+                                console.log(event.clientY )
+                                console.log(rect.left)
+                                coordenadaX = event.clientX - rect.left;
+                                coordenadaY = canvasHeight - (event.clientY - rect.top);
+                                clickPage = canvas.id
+                                console.log(`Click en canvas ${canvas.id} en posición x: ${coordenadaX}, y: ${coordenadaY}`);
                             };
                         }
                     });
@@ -106,8 +115,13 @@
         $('#uploadForm').on('submit', function (e) {
                 e.preventDefault();
                 console.log("Firmado")
-                console.log(`en posición x: ${clickCoordinates.x}, y: ${clickCoordinates.y}`);
+                console.log(`en posición x: ${coordenadaX}, y: ${coordenadaY}`);
+                console.log("Página: " + clickPage)
+                console.log('Coordenadas')
                 var formData = new FormData(this);
+                formData.append("pagina", clickPage)
+                formData.append("coordenadaX", coordenadaX)
+                formData.append("coordenadaY", coordenadaY)
 
                 $.ajax({
                     url: "{% url 'upload_document' %}",

@@ -98,10 +98,21 @@ import aspose.pdf as pdf
 import aspose.pydrawing as drawing
 import datetime
 from cryptography import x509
+import json
 
 def prueba01(request):
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
+        pagina = request.POST.get('pagina')
+        coordenadaX = float(request.POST.get('coordenadaX'))
+        coordenadaY = float(request.POST.get('coordenadaY'))
+        coordenadaX = coordenadaX 
+        coordenadaY = coordenadaY
+        coordenadaX = 495
+        coordenadaY = 842
+        print(coordenadaX)
+        print(coordenadaY)
+        print("pagina " + pagina)
         if form.is_valid():
             pdf_file = request.FILES['pdf']
             p12_file = request.FILES['p12']
@@ -116,7 +127,7 @@ def prueba01(request):
             p12_stream = io.BytesIO(p12_bytes)
 
             date = datetime.datetime.now()
-            print(date)
+
             date = date.strftime("D:%Y%m%d%H%M%S")
             #Cargar y validar certificado
             p12 = pkcs12.load_key_and_certificates(
@@ -157,12 +168,12 @@ def prueba01(request):
                 "aligned": 0,
                 "sigflags": 3,
                 "sigflagsft": 132,
-                "sigpage": 0,
+                "sigpage": int(pagina)-1,
                 "sigbutton": True,
                 "sigfield": "Signature",
                 "auto_sigfield": True,
                 "sigandcertify": True,
-                "signaturebox": (470, 840, 570, 640),
+                "signaturebox": (float(coordenadaX), float(coordenadaY), float(coordenadaX)+100, float(coordenadaY)-200),
                 "signature": signature_text,
                 #"signature_img": signature_image_path,
                 "contact": dataSignatory['emailAddress'],
