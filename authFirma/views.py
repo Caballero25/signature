@@ -88,7 +88,7 @@ def firmar(contraseña, certificado, pdf):
     return datau, datas
 
 
-##############           PRUEBA 01
+##############           PRUEBA 01 ################################## BUENA ########################################################################
 import io 
 import base64
 from django.shortcuts import render, redirect
@@ -108,8 +108,6 @@ def prueba01(request):
         coordenadaY = float(request.POST.get('coordenadaY'))
         coordenadaX = coordenadaX 
         coordenadaY = coordenadaY
-        coordenadaX = 495
-        coordenadaY = 842
         print(coordenadaX)
         print(coordenadaY)
         print("pagina " + pagina)
@@ -173,7 +171,7 @@ def prueba01(request):
                 "sigfield": "Signature",
                 "auto_sigfield": True,
                 "sigandcertify": True,
-                "signaturebox": (float(coordenadaX), float(coordenadaY), float(coordenadaX)+100, float(coordenadaY)-200),
+                "signaturebox": (float(coordenadaX), float(coordenadaY), float(coordenadaX)+128, float(coordenadaY)-120),
                 "signature": signature_text,
                 #"signature_img": signature_image_path,
                 "contact": dataSignatory['emailAddress'],
