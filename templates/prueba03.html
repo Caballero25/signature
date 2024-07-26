@@ -77,7 +77,7 @@
         let coordenadaX = 676;
         let coordenadaY = 1147;
         let clickPage = 1
-        let imageUrl = "{% static 'cursor-removebg.png' %}"; // Cambia esto por la ruta de tu imagen
+        let imageUrl = "{% static 'cursor-removebg.png' %}";
         let $currentImage;
 
         document.getElementById('fileInput').addEventListener('change', function(event) {
@@ -169,7 +169,7 @@
                     processData: false,
                     contentType: false,
                     success: function (response) {
-                        $('#result').html('<p>' + response.message + '</p>');
+                        alert("Archivo firmado con éxito")
                         if (response.signed_pdf) {
                         // Crear un enlace de descarga para el PDF firmado
                             var link = document.createElement('a');
