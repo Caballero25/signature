@@ -7,6 +7,8 @@
     <title>Upload Document</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
         .horizontal-form {
             display: flex;
@@ -48,8 +50,16 @@
             display: block;
             z-index: 10;
         }
-        .proof {
-            height: 500vh;
+
+        /*CONTENEDOR SS*/
+        #vista-previa {
+            width: 125px;
+            height: 150px;
+            border: 1px solid green;
+            margin-top: 20px;
+            position: absolute;
+            top: 10;
+            left: 10;
         }
     </style>
 </head>
@@ -70,8 +80,9 @@
         <button type="submit">Subir</button>
     </form>
     <div id="result"></div>
-    <div id="pdfViewer"></div>
-    <div class="proof"></div>
+    <div id="pdfViewer"><div id="vista-previa"></div></div>
+
+    
 
     <script>
         let coordenadaX = 676;
@@ -91,14 +102,14 @@
                         console.log('PDF cargado');
 
                         const pdfViewer = document.getElementById('pdfViewer');
-                        pdfViewer.innerHTML = '';
+                        //pdfViewer.innerHTML = '';
 
                         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
                             const page = await pdf.getPage(pageNumber);
                             const viewport = page.getViewport({ scale: 1.5 });
                             const canvas = document.createElement('canvas');
                             const canvasContainer = document.createElement('div');
-                            const context = canvas.getContext('2d');
+                            const context = canvas.getContext('2d', { willReadFrequently: true });
                             canvas.height = viewport.height;
                             canvas.width = viewport.width;
 
@@ -137,7 +148,7 @@
                                     top: yPos + 'px',
                                     left: xPos + 'px',
                                     zIndex: 30,
-                                    position: "fixed"
+                                    position: "absolute"
                                     
                                 });
                                 $(parentCanva).append($currentImage);
@@ -184,6 +195,42 @@
                     }
                 });
             });
+
+    // SS CÓDIGO PRUEBAS ///////////////////////////////////////////////
+    document.addEventListener('DOMContentLoaded', () => {
+    const contenedor = document.getElementById('pdfViewer');
+    const vistaPrevia = document.getElementById('vista-previa');
+
+    contenedor.addEventListener('click', (e) => {
+        const rect = contenedor.getBoundingClientRect();
+        const x = e.clientX - rect.left + 60;
+        const y = e.clientY - rect.top + 62.5;
+
+        html2canvas(contenedor).then(canvas => {
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+             // Determinar las coordenadas del área a capturar
+            const captureX = Math.max(0, x - 62.5); // 125px / 2
+            const captureY = Math.max(0, y - 75);   // 150px / 2
+            const captureWidth = Math.min(125, contenedor.offsetWidth - captureX);
+            const captureHeight = Math.min(150, contenedor.offsetHeight - captureY);
+
+            // Crear un nuevo canvas para la vista previa
+            const previewCanvas = document.createElement('canvas');
+            previewCanvas.width = captureWidth;
+            previewCanvas.height = captureHeight;
+            const previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true });
+            
+            // Dibujar el área capturada en el nuevo canvas
+            previewCtx.drawImage(canvas, captureX, captureY, captureWidth, captureHeight, 0, 0, captureWidth, captureHeight);
+
+            // Mostrar la vista previa
+            vistaPrevia.innerHTML = ''; // Limpiar el contenedor de vista previa
+            vistaPrevia.appendChild(previewCanvas);
+            $currentImage.remove();
+        });
+    });
+});
     </script>
 </body>
 </html>

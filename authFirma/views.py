@@ -171,7 +171,7 @@ def prueba01(request):
                 "sigfield": "Signature",
                 "auto_sigfield": True,
                 "sigandcertify": True,
-                "signaturebox": (float(coordenadaX), float(coordenadaY), float(coordenadaX)+128, float(coordenadaY)-120),
+                "signaturebox": (float(coordenadaX), float(coordenadaY-75), float(coordenadaX)+128, float(coordenadaY)-120),
                 "signature": signature_text,
                 #"signature_img": signature_image_path,
                 "contact": dataSignatory['emailAddress'],
