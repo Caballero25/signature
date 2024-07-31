@@ -9,9 +9,13 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from endesive.pdf import cms
 from cryptography.hazmat.backends import default_backend
 from PyPDF2 import PdfReader, PdfWriter
-from django.conf import settings
-import tempfile
-import os
+import io 
+import base64
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .forms import DocumentForm
+import datetime
+
 
 def index(request):
     return render(request, 'firma.html')
@@ -89,16 +93,7 @@ def firmar(contraseña, certificado, pdf):
 
 
 ##############           PRUEBA 01 ################################## BUENA ########################################################################
-import io 
-import base64
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from .forms import DocumentForm
-import aspose.pdf as pdf
-import aspose.pydrawing as drawing
-import datetime
-from cryptography import x509
-import json
+
 
 def prueba01(request):
     if request.method == 'POST':
@@ -151,17 +146,9 @@ def prueba01(request):
             for attribute in subject:
                 print(str(attribute.oid._name) + " exitoso")
                 dataSignatory[attribute.oid._name] = attribute.value
-            
-            imagenInfo = generate_qr_code("https://www.example.com")
-            # Convertir la imagen de PIL a bytes en formato PNG
-            
-            # Crear una ruta temporal para la imagen de la firma
-            #with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_image:
-            #    signature_image_path = temp_image.name
-            #    create_signature_image(signature_text, signature_image_path)
 
             
-            signature_text = f"Firmado por\n{dataSignatory['commonName']}"
+            signature_text = f"Firma digital de\n{dataSignatory['commonName']}"
             dct = {
                 "aligned": 0,
                 "sigflags": 3,
@@ -203,47 +190,3 @@ def prueba01(request):
         form = DocumentForm()
     return render(request, 'prueba03.html', {'form': form})
 
-import qrcode
-from io import BytesIO
-from PIL import Image
-
-def generate_qr_code(dataa):
-    # Generar el código QR
-    data = dataa
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-
-    # Crear la imagen
-    img = qr.make_image(fill='black', back_color='white')
-
-    # Almacenar la imagen en una variable como PNG
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    img_png = buffered.getvalue()
-    return img_png
-
-from PIL import Image, ImageDraw, ImageFont
-import io
-
-def create_signature_image(text, file_path):
-    # Crear una imagen en blanco
-    width, height = 200, 50
-    image = Image.new('RGB', (width, height), color='white')
-    
-    # Crear un objeto de dibujo
-    draw = ImageDraw.Draw(image)
-    
-    # Definir la fuente y el tamaño
-    font = ImageFont.load_default()
-    
-    # Dibujar el texto en la imagen
-    draw.text((10, 10), text, font=font, fill='black')
-    
-    # Guardar la imagen en el sistema de archivos
-    image.save(file_path, format='PNG')
